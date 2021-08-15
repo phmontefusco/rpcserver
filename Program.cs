@@ -10,10 +10,14 @@ namespace rpcserver
         public static void Main(string[] args)
         {
             var factory = new ConnectionFactory() { HostName = "localhost" };
+            string queueName = "fila_hello";
             using var connection = factory.CreateConnection();
-            using var channel = connection.CreateModel();
-            QueueConsumer.Consume(channel);
-
+            using var channel = CreateChannel(connection, queueName);
+            
+            for(int index = 0; index < 10; index++)
+            {
+                QueueConsumer.Consumer(channel, queueName, "Consumidor " + index.ToString());
+            }
             // {
             //     channel.QueueDeclare(queue: "fila_helo", durable: false, exclusive: false, autoDelete: false, arguments: null);
 
@@ -28,10 +32,25 @@ namespace rpcserver
             //     };
             //     channel.BasicConsume(queue: "fila_helo", autoAck: true, consumer: consumer);
 
-            //     Console.WriteLine(" Press [enter] to exit.");
-            //     Console.ReadLine();
             // }
-            connection.Close();
+            Console.WriteLine(" Press [enter] to exit.");
+            Console.ReadLine();
+            // channel1.Close();
+            // connection.Close();
         }
+
+        public static IModel CreateChannel(IConnection connection, string queueName)
+        {
+            var channel = connection.CreateModel();
+
+            channel.QueueDeclare(queue: queueName, 
+                durable: false, 
+                exclusive: false, 
+                autoDelete: false, 
+                arguments: null);
+
+            return channel;
+        }
+
     }
 }
